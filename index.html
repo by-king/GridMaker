@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<style>
+
+body {
+	margin:0;
+	font: 10px sans-serif;
+	background-color: #333;
+}
+
+:focus {outline: none;}
+
+.settings {
+	padding: 5px;
+	background-image: linear-gradient(#AAA, #888);
+	text-align: center;
+	border-top: 1px solid #DDD;
+	border-bottom: 1px solid #555;
+}
+
+.settings input {
+	border: 1px solid #999;
+	box-shadow: inset 0 0 5px rgba(0,0,0,.3);
+	padding: 2px;
+	border-radius: 2px;
+}
+
+.settings input:focus {
+	background-color: #FFD;
+}
+
+::selection {
+	background-color: #CEF;
+}
+
+.settings label {
+	text-shadow: 0 1px 1px rgba(255,255,255,.3);
+	-webkit-user-select: none;
+}
+
+.code {
+	box-shadow: inset 0 0 5px rgba(0,0,0,.5);
+	border: 1px solid #999;
+	padding: 5px;
+	font: 14px monospace;
+	background-color: white;
+}
+
+.result {
+	-webkit-user-select: none;
+	padding: 0px;
+	padding-top: 20px;
+	padding-bottom: 25px;
+	background-color: #DDD;
+	border-top: 1px solid #EEE;
+	border-bottom: 1px solid #CCC;
+}
+
+.result .container {
+	width: 1024px;
+	margin: auto;
+	padding: 0 5px;
+	box-sizing: border-box;
+	background-color: white;
+}
+
+.result .row {
+	display: block;
+}
+
+.result .row::after,
+.result .row::before {
+	clear: both;
+	content: "";
+	display: table;
+}
+
+.result [class^="col-"] {
+	box-sizing: border-box;
+	margin: 0 5px;
+	padding: 5px;
+	float: left;
+	background-color: #FEE;
+	border: 1px solid #FAA;
+}
+
+</style>
+<form id="settings" class="settings">
+	<label for="container_width">Container width:</label></dt>
+	<input id="container_width" type="number" autofocus value="1024" min="400" step="10" />
+	<label for="spacing">Spacing:</label>
+	<input id="spacing" type="number" value="10" step="2" min="0" />
+	<label for="column_count">Number of columns:</label>
+	<input id="column_count" type="number" value="6" step="2" min="2" />
+</form>
+<section class="result">
+	<div id="container" class="container">
+	</div>
+</section>
+<div class="code"><pre id="code"></pre></div>
+<script>
+(function () {
+var state = window.s = {container_width: 1024, spacing: 10, column_count: 6};
+
+var header = '/**\n\
+ * css grid made with GridMaker 2015, created by Youness Belfkih\n\
+ * http://youbel.github.com/GridMaker/\n\
+ */\n';
+
+var form = document.getElementById('settings');
+var container = document.getElementById('container');
+var code = document.getElementById('code');
+
+form.onchange = function (e) {
+	state[e.target.id] = parseInt(e.target.value);
+	generate();
+};
+
+function unitWidth() {
+	return (state.container_width-(state.spacing*(state.column_count+1)))/state.column_count;
+}
+
+function columnWidth (size, unit, spacing) {
+	return size*unit+(size-1)*spacing;
+}
+
+function styleElement (element, size, unit, spacing) {
+	var width = columnWidth(size, unit, spacing);
+	element.style.width = width+"px";
+	element.style.margin = "0 "+(spacing/2)+"px";
+}
+
+function emptyDOM () {
+	container.innerHTML = "";
+}
+
+function generateCSS () {
+	var css = header;
+
+	css += generateContainerCSS();
+
+	css += generateRowCSS();
+
+	css += generateColumnCSS();
+
+	var unit = unitWidth();
+
+	for (var size = 1; size <= state.column_count; size++) {
+		css += generateSpecialColumnCSS(unit, size);
+	}
+
+	code.innerText = css;
+}
+
+function generate() {
+	var unit = unitWidth();
+	emptyDOM();
+	for (var i = 1; i <= state.column_count; i++) {
+		var row = container.appendChild(document.createElement("div"));
+		row.classList.add("row");
+		var rest = state.column_count;
+		while (rest > 0) {
+			var size = i;
+			if (rest - i < 0) {
+				size = rest;
+			}
+			var element = row.appendChild(document.createElement("div"));
+			element.classList.add("col-"+size);
+			element.innerText = "column "+size;
+			styleElement(element, size, unit, state.spacing)
+			rest -= size;
+		}
+	}
+	container.style.width = state.container_width+"px";
+	container.style.padding = "0 "+(state.spacing/2)+"px";
+
+	generateCSS();
+}
+
+function generateContainerCSS () {
+	return '\n.container {\n\
+    width: '+state.container_width+'px;\n\
+    margin: auto;\n\
+    padding: 0 '+(state.spacing/2)+'px;\n\
+    box-sizing: border-box;\n\
+}\n';
+}
+
+function generateColumnCSS () {
+	return '\n[class^="col-"] {\n\
+    box-sizing: border-box;\n\
+    margin: 0 5px;\n\
+    float: left;\n\
+}';
+}
+
+function generateRowCSS() {
+	return '\n.row {\n\
+    display: block;\n\
+}\n\n\
+.row::after,\n\
+.row::before {\n\
+    clear: both;\n\
+    content: "";\n\
+    display: table;\n\
+}';
+}
+
+function generateSpecialColumnCSS (unit, size) {
+	var width = columnWidth(size, unit, state.spacing);
+	return '\n.col-'+size+' {\n\
+    width: '+width.toFixed(2)+'px;\n\
+    margin: 0 '+(state.spacing/2)+'px;\n\
+}\n';
+}
+
+generate();
+
+})();
+</script>
