@@ -1,2 +1,2 @@
 # GridMaker
-CSS Grid Maker (visit http://youbel.github.com/GridMaker/)
+CSS Grid Maker (visit http://by-king.github.io/GridMaker/)
